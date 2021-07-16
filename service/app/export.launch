@@ -1,0 +1,12 @@
+<launch>
+  <node name="extractRight" pkg="image_view" type="image_saver" respawn="false" required="true" output="screen" cwd="ROS_HOME">
+    <remap from="image" to="/flir_adk/rgb_front_right/image_raw/"/>
+    <param name="filename_format" value="right%04i.png"/>
+  </node>
+  <node name="extractLeft" pkg="image_view" type="image_saver" respawn="false" required="true" output="screen" cwd="ROS_HOME">
+    <remap from="image" to="/flir_adk/rgb_front_left/image_raw/"/>
+    <param name="filename_format" value="left%04i.png"/>
+  </node>
+  <node name="compressedRight" pkg="image_transport" type="republish" args="compressed in:=/flir_adk/rgb_front_right/image_raw/ out:=/flir_adk_out/rgb_front_right/image_raw/"/>
+  <node name="compressedLeft" pkg="image_transport" type="republish" args="compressed in:=/flir_adk/rgb_front_left/image_raw/ out:=/flir_adk_out/rgb_front_left/image_raw/"/>
+</launch>

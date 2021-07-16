@@ -1,0 +1,19 @@
+{
+  "ecr-repository-name": "vsi-rosbag-image-repository",
+  "image-name": "my-vsi-ros-image",
+  "stack-id": "my-vsi-rosbag-stack",
+  "cpu": 4096,
+  "memory-limit-mib": 12288,
+  "timeout-minutes": 480,
+  "s3-filters": {
+    "prefix": [],
+    "suffix": [
+      ".bag"
+    ]
+  },
+  "environment-variables": {
+    "s3_source_prefix": "$.key",
+    "s3_source" : "$.bucket",
+    "s3_destination" : "$.dest_bucket"
+  }
+}

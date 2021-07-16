@@ -1,0 +1,49 @@
+FROM ros:kinetic-ros-base
+
+RUN apt update
+RUN apt install git -y
+RUN apt-get install ros-kinetic-pcl-conversions -y
+RUN apt-get install ros-kinetic-pcl-ros -y
+RUN apt-get install -y python-pip
+
+RUN mkdir /app
+COPY ./app/catkin_ws /app/catkin_ws
+
+RUN apt-get update
+RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
+RUN wget \
+    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && mkdir /root/.conda \
+    && bash Miniconda3-latest-Linux-x86_64.sh -b \
+    && rm -f Miniconda3-latest-Linux-x86_64.sh
+
+RUN conda --version
+
+RUN conda create -n py3env python=3.8
+# Make RUN commands use the new environment:
+SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
+
+#RUN conda init bash
+RUN /root/miniconda3/bin/activate py3env
+
+COPY ./app/requirements.txt /app/requirements.txt
+RUN pip install -r /app/requirements.txt
+
+COPY ./app/bag_to_csv.py /app/catkin_ws/src/AVData/ford_demo/scripts/bag_to_csv.py
+COPY ./app/parse-file.sh /app/parse-file.sh
+
+## Run test on test data
+#COPY ./app/Sample-Data.bag /app/Sample-Data.bag
+#COPY ./app/topics-to-extract.yaml /app/topics-to-extract.yaml
+#RUN /bin/bash -c "bash /app/parse-file.sh /app/Sample-Data.bag /app/topics-to-extract.yaml"
+#RUN rm /app/Sample-Data.bag
+#RUN rm /app/topics-to-extract.yaml
+
+COPY ./app/engine.py /app/engine.py
+COPY ./app/main.py /app/main.py
+
+WORKDIR /app
+
+ENTRYPOINT ["python3", "main.py"]
+

@@ -1,0 +1,14 @@
+-e .
+aws_cdk.aws_ec2==1.114.0
+aws_cdk.aws_s3==1.114.0
+aws_cdk.aws_ecs==1.114.0
+aws_cdk.aws_efs==1.114.0
+aws_cdk.aws_ecs_patterns==1.114.0
+aws_cdk.aws_ecr==1.114.0
+aws_cdk.aws_stepfunctions_tasks==1.114.0
+aws_cdk.aws_stepfunctions==1.114.0
+aws_cdk.aws_logs==1.114.0
+aws_cdk.aws_lambda_event_sources==1.114.0
+aws_cdk.aws_lambda==1.114.0
+aws_cdk.aws_sagemaker==1.114.0
+boto3
