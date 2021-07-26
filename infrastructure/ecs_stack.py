@@ -74,6 +74,7 @@ class Fargate(core.Stack):
             self,
             "efs",
             vpc=vpc,
+            encrypted=True,
             removal_policy=core.RemovalPolicy.DESTROY,
             throughput_mode=efs.ThroughputMode.BURSTING,
             performance_mode=efs.PerformanceMode.MAX_IO,
