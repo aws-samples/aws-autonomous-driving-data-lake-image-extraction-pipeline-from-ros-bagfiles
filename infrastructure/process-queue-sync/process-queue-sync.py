@@ -22,7 +22,7 @@ def export_json_file(file_labels, bucket, key):
     # This function assumes that the mp4 we processed contains one or more frames, the time of the start
     # of the mp4 can be calculated from the filename index * frame duration
     # Assumption: the S3 prefixes are of the form:
-    #
+    # <name>-
 
     path_elems = key.split("/")
     file_elems = path_elems[-1].split(".")
