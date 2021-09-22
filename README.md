@@ -14,7 +14,9 @@ how to remove the stack when you have finished with it.
           "image-name": "my-image",
           "stack-id": "my-stack"
     }
-     
+   
+   Ypu will need to ensure that you have also created an ECR repository matching the name used above (in this case my-ecr-rpository)
+   
    Optionally (leave these as they are unless you know you need to change them), define other parameters for your Docker 
    container, such as number of vCPUs and RAM it should consume, in config.json:
     
