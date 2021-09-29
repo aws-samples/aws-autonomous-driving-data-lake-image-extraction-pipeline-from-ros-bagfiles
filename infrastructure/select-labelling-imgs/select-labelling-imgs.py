@@ -23,8 +23,8 @@ def iterate_bucket_items(bucket, prefix):
                 yield item
 
 
-def detect_scene(bucket, key):
-    client = boto3.client("rekognition", "eu-west-1")
+def detect_scene(bucket, key, region):
+    client = boto3.client("rekognition", region)
     response = client.detect_labels(
         Image={"S3Object": {"Bucket": bucket, "Name": key}},
         MaxLabels=10,
@@ -55,8 +55,8 @@ def filter_vru(annotations):
     return contains_ped, contains_wheeler
 
 
-def anonymize_PII(photo, bucket, key, blurriness=15):
-    client = boto3.client("rekognition", "eu-west-1")
+def anonymize_PII(photo, bucket, key, region, blurriness=15):
+    client = boto3.client("rekognition", region)
     # Call DetectText
     while True:
         try:
@@ -135,6 +135,7 @@ def lambda_handler(event, context):
         bucket = r["s3"]["bucket"]["name"]
         key = r["s3"]["object"]["key"]
         image_bucket = os.environ["image_bucket"]
+        region = r["awsRegion"]
 
         json_obj = boto3.resource("s3").Object(bucket, key)
         json_obj.wait_until_exists()
@@ -153,7 +154,7 @@ def lambda_handler(event, context):
             continue
         print(f"downloading {bucket}/{png_key}")
         s3.download_file(bucket, png_key, local_file)
-        anonymize_PII(local_file, bucket, png_key)
+        anonymize_PII(local_file, bucket, png_key, region)
         s3.upload_file(local_file, image_bucket, png_key)
         os.remove(local_file)
 
