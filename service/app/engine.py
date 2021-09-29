@@ -91,7 +91,7 @@ def parse_bag(config):
 
         # Play back at 1/10th speed to avoid overruns
         retcode = subprocess.call(
-            f"source /opt/ros/melodic/setup.bash; rosbag play -r 0.5 {local_bag_file}",
+            f"source /opt/ros/melodic/setup.bash; rosbag play -r 0.1 {local_bag_file}",
             shell=True,
         )
         if retcode < 0:
