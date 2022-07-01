@@ -1,6 +1,6 @@
+Pillow
+rospkg
+py3rosmsgs
 boto3
-numpy
-pandas
-psutil
-pyyaml
-snappy
+pycryptodomex
+bagpy
