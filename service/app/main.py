@@ -9,10 +9,13 @@ import uuid
 
 
 class Uploader(Process):
+ 
+    _image_dirs = set()
+   
+    
     def __init__(self, s3_bucket):
         self.s3_bucket = s3_src_bucket
         self.q = Queue()
-        self._image_dirs = []
         self.working_dir = f'/root/efs/{uuid.uuid1().hex}/'
         super().__init__()
 
@@ -28,8 +31,8 @@ class Uploader(Process):
                 s3.upload_file(file, self.s3_bucket, s3_prefix)
                 image_dir = '/'.join(file.split('/')[:-1])
                 if file.endswith('.png'):
-                    if image_dir not in self._image_dirs:
-                        self._image_dirs.append(image_dir)
+                    print(f'adding {image_dir}')
+                    self._image_dirs.add(image_dir)
                 
             except Exception as e:
                 logging.warning(e)
@@ -102,6 +105,7 @@ if __name__ == '__main__':
 
     while not queue.empty():
         pass
+    
     upload.terminate()
     #
     #subprocess.call(
