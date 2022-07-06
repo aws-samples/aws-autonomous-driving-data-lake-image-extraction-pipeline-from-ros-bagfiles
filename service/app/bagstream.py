@@ -53,6 +53,13 @@ class ConnectionInfo (bag._ConnectionInfo):
 logging.basicConfig(level=logging.INFO)
 
 class bagFileStream:
+    """
+    Extracts data from a ROS bag file using streaming access only.
+    
+    This is really for data lake formation where we want to just extract 
+    everything from the bag file.
+    
+    """
 
     def __init__(self, input_stream, upload_callback, output_prefix=''):
 
@@ -215,8 +222,8 @@ class bagFileStream:
         if 'std_msgs' in msg_type:
             msg_type = 'std_msg'
 
-        if msg_type in self.process_message.keys():
-            self.process_message[msg_type](self, conn, data, record_header, msg)
+        if msg_type in self.process_message_map.keys():
+            self.process_message_map[msg_type](self, conn, data, record_header, msg)
         else:
             self.process_topic(conn, data, record_header, msg)
             logging.warning(f"unknown message type: {conn['type']}")
@@ -288,18 +295,6 @@ class bagFileStream:
                    msg.twist.twist.linear.z]
         conn['csv_writer'].writerow(new_row)
 
-    def process_odometry_data(self, conn, data, record_header, msg):
-
-        new_row = [record_header['time'],
-                   msg.linear.x,
-                   msg.linear.y,
-                   msg.linear.z,
-                   msg.angular.x,
-                   msg.angular.y,
-                   msg.angular.z]
-
-        conn['csv_writer'].writerow(new_row)
-
     def process_wrench_data(self, conn, data, record_header, msg):
 
         new_row = [record_header['time'],
@@ -368,7 +363,7 @@ class bagFileStream:
             conn['csv_file'].close()
             self.upload_callback(conn['csv_filename'])
 
-    process_message={'sensor_msgs/Image' : process_image_data,
+    process_message_map={'sensor_msgs/Image' : process_image_data,
                      'sensor_msgs/LaserScan' : process_laser_data,
                      "std_msgs" : process_std_data,
                      "nav_msgs/Odometry" : process_odometry_data,

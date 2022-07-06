@@ -1,10 +1,27 @@
 
-# ROS bag image extraction pipeline and Model Training
-This solution describes a workflow that processes ROS bag files on Amazon S3, extracts the PNG files from a video stream using AWS Fargate on Amazon Elastic Container Services. The solution builds a DynamoDB table containing all detection results from Amazon Rekognition, which can be queried to find images of interest such as images containing cars. Afterwards, we want to label these images and fine-tune a Object Detection Model to detect cars on the road. For simplicity reasons, we have provided an example SageMaker Ground Truth Manifest File from a Bounding Boxes Labeling Job. In order to train the Object Detection Model we will convert the SageMaker Ground Truth Manifest file into the RecordIO file format, after we have visually inspected the annotation quality from our labelling job.
+# ROS bag file extraction pipeline and Model Training
+This solution describes a workflow that processes ROS bag files on Amazon S3, 
+extracts all tabular data plus images (as PNG files) from camera streams using 
+AWS Fargate on Amazon Elastic Container Services. It also compines the PNGs for 
+each camera into an mp4 video and creates a .csv file containing the image 
+timestamps. 
+
+The solution builds a DynamoDB table containing 
+all detection results from Amazon Rekognition, which can be queried to find 
+images of interest such as images containing cars. Afterwards, we want to 
+label these images and fine-tune a Object Detection Model to detect cars on the 
+road. 
+
+For simplicity reasons, we have provided an example SageMaker Ground Truth 
+Manifest File from a Bounding Boxes Labeling Job. In order to train the Object 
+Detection Model we will convert the SageMaker Ground Truth Manifest file into 
+the RecordIO file format, after we have visually inspected the annotation 
+quality from our labelling job.
 
 ## Initial Configuration and Deployment of the CDK Stack
 
-Note that deploying this stack may incur charges on your AWS account. See the section 'Cleaning Up' for instructions on 
+Note that deploying this stack may incur charges on your AWS account. See the 
+section 'Cleaning Up' for instructions on 
 how to remove the stack when you have finished with it.
 
     Define 3 names for your infrastructure in config.json:
@@ -39,7 +56,7 @@ how to remove the stack when you have finished with it.
    
 
 Extending the code to meet your use case:
-    Extend the ./service/app/engine.py file to add more complex transformation logic
+    Extend the ./service/app/main.py file to add more complex transformation logic
     
     Customizing Input
         Add prefix and suffix filters for the S3 notifications in config.json
