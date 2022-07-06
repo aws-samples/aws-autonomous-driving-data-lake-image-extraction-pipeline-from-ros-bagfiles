@@ -37,8 +37,8 @@ import csv
 import os
 from PIL import Image
 from rosbag import bag
-import boto3
 from bagpy.bagreader import slotvalues
+from datetime import datetime, timedelta
 
 
 class ConnectionInfo (bag._ConnectionInfo):
@@ -209,10 +209,17 @@ class bagFileStream:
 
         return bagfile
 
+    def ros_time_to_iso(self, timestamp):
+        time = datetime.fromtimestamp(0) + \
+            timedelta(seconds=timestamp & 0xffffffff, microseconds=(timestamp >> 32) // 1000)
+        return 
+
+
     def process_message(self, record_header, bagfile):
         data = bagfile.read(record_header['data_len'])
         conn = self.connections[record_header['conn']]
         record_header['time'] = int.from_bytes(record_header['time'], byteorder='little')
+        record_header['isotime'] = self.ros_time_to_iso(record_header['time'])
 
         msg_type = bag._get_message_type(ConnectionInfo(conn ))
         msg = msg_type()
@@ -257,11 +264,12 @@ class bagFileStream:
 
         self.upload_callback(img_file)
 
-        new_row = [record_header['time'],img_file]
+        new_row = [record_header['time'], record_header['isotime'], img_file]
         conn['csv_writer'].writerow(new_row)
 
     def process_laser_data(self, conn, data, record_header, msg):
         new_row = [record_header['time'],
+                   record_header['isotime'],
                    msg.header.seq,
                    msg.header.frame_id,
                    msg.angle_min,
@@ -275,11 +283,13 @@ class bagFileStream:
 
     def process_std_data(self, conn, data, record_header, msg):
         new_row = [record_header['time'],
+                   record_header['isotime'],
                    msg.data]
         conn['csv_writer'].writerow(new_row)
 
     def process_odometry_data(self, conn, data, record_header, msg):
         new_row = [record_header['time'],
+                   record_header['isotime'],
                    msg.header.seq,
                    msg.header.frame_id,
                    msg.child_frame_id,
@@ -298,6 +308,7 @@ class bagFileStream:
     def process_wrench_data(self, conn, data, record_header, msg):
 
         new_row = [record_header['time'],
+                   record_header['isotime'],
                    msg.force.x,
                    msg.force.y,
                    msg.force.z,
@@ -311,7 +322,7 @@ class bagFileStream:
 
         if not conn['csv_header_written']:
             # set column names from the slots
-            cols = ["Time"]
+            cols = ["Time", "ISOTime"]
             slots = msg.__slots__
             for s in slots:
                 v, s = slotvalues(msg, s)
@@ -332,6 +343,7 @@ class bagFileStream:
         slots = msg.__slots__
         vals = []
         vals.append(record_header['time'])
+        vals.append(record_header['isotime'])
         for s in slots:
             v, s = slotvalues(msg, s)
             if isinstance(v, tuple):
