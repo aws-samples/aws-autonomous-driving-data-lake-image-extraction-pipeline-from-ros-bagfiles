@@ -34,25 +34,16 @@ def export_json_file(file_labels, bucket, key):
     logging.info(f"Uploading {bucket}/{upload_key}")
     s3.upload_fileobj(f, bucket, upload_key)
 
-    # calculate the absolute timestamp of this frame based on the prefix name and
-    # the file index * the duration per frame
-    camera = re.match("[A-Za-z]*", file_elems[0]).group(0)
-    file_offset = int(re.search("[0-9]{4}", file_elems[0]).group(0))
-    print(f"file offset:{file_offset}")
 
-    # Extract the base time for the .bag file from the S3 prefix
-    bt_elems = path_elems[-2].split("_")
-    bt_elems = bt_elems[-2].split("-")
-    frame_time = datetime(*[int(x) for x in bt_elems[0:6]])
-    print(f"frame time: {frame_time}")
+    # get the timestamp from the filename which will of the format 
+    # image_raw-2020-12-16T23_32_19.969307-0002.png
+    year, month, day_time = file_elems[0].split('-')[1:4]
+    # iso 
+    day_time = day_time.replace('_',':')
+    iso = f'{year}-{month}-{day_time}'
+    frame_time = datetime.fromisoformat(iso)
 
-    # now adjust for the file offset in the file name (e.g. front<offset>.png) as well as
-    # the timestamp relative to the the start of the mp4 file
-    td = timedelta(milliseconds=(file_offset * frame_duration))
-    print(f"td:{td}")
-    frame_time = frame_time + td
-    print(f"ft_iso: {frame_time.isoformat()}")
-
+    camera = re.match("[A-Za-z_]*", path_elems[-2]).group(0)
     s3_key = "/".join([bucket, key]).replace("mp4", "png")
     table = os.environ["results_table"]
 
@@ -154,25 +145,28 @@ def lambda_handler(event, context):
         key = body["Records"][0]["s3"]["object"]["key"]
         s3_loc = "/".join([bucket, key])
         receipt_handle = m["receiptHandle"]
-        png_key = key.replace("mp4", "png")
 
-        json_key = key.replace("mp4", "json")
-        response = rek.detect_labels(
-            Image={"S3Object": {"Bucket": bucket, "Name": png_key}}
-        )
-        print(response)
-
-        process_labels(bucket, key, response["Labels"])
-        ddb.update_item(
-            TableName=monitor_table,
-            Key={"img_file": {"S": s3_loc}},
-            UpdateExpression="SET #s = :sts, #e = :now",
-            ExpressionAttributeNames={"#s": "Status", "#e": "End"},
-            ExpressionAttributeValues={
-                ":sts": {"S": "Complete"},
-                ":now": {"S": datetime.now().isoformat()},
-            },
-        )
+        # only process raw images
+        if key.contains('image_raw'):
+            
+            json_key = key.replace("png", "json")
+            print(f'key: {key}')
+            response = rek.detect_labels(
+                Image={"S3Object": {"Bucket": bucket, "Name": key}}
+            )
+            print(response)
+    
+            process_labels(bucket, key, response["Labels"])
+            ddb.update_item(
+                TableName=monitor_table,
+                Key={"img_file": {"S": s3_loc}},
+                UpdateExpression="SET #s = :sts, #e = :now",
+                ExpressionAttributeNames={"#s": "Status", "#e": "End"},
+                ExpressionAttributeValues={
+                    ":sts": {"S": "Complete"},
+                    ":now": {"S": datetime.now().isoformat()},
+                },
+            )
 
         sqs.delete_message(
             QueueUrl=os.environ["job_queue_url"], ReceiptHandle=receipt_handle

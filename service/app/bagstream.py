@@ -212,7 +212,8 @@ class bagFileStream:
     def ros_time_to_iso(self, timestamp):
         time = datetime.fromtimestamp(0) + \
             timedelta(seconds=timestamp & 0xffffffff, microseconds=(timestamp >> 32) // 1000)
-        return 
+        # replace colons with underscores for s3 compatibility    
+        return time.isoformat().replace(':', '_')
 
 
     def process_message(self, record_header, bagfile):
@@ -248,7 +249,7 @@ class bagFileStream:
         img_encodings = {'rgb8': 'RGB', 'rgba8': 'RGBA', 'mono8': 'L', '8UC3' : 'RGB'}
 
         img_root = os.path.join(self.output_prefix, conn["topic"].replace('/','',1))
-        img_file = os.path.join(img_root + f'-{conn["frame_count"]:04d}.png')
+        img_file = os.path.join(f'{img_root}-{record_header["isotime"]}-{conn["frame_count"]:04d}.png')
         conn['frame_count'] = conn['frame_count'] + 1
 
         img = Image.frombytes(img_encodings[msg.encoding], (msg.width, msg.height), msg.data)
