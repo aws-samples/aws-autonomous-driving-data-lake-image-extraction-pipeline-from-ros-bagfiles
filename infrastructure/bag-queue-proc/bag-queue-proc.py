@@ -17,6 +17,9 @@ def trigger_bag_processing(bucket, dest_bucket, prefix):
     now = str(int(time.time()))
     name = prefix + "-sf-" + now
     name = re.sub("\W+", "", name)
+    # limit name to 80 chars
+    name = name[-79:]
+
     print(s3_object)
     client = boto3.client("stepfunctions")
     try:
